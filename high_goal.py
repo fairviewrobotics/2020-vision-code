@@ -6,6 +6,9 @@ import math
 
 import sys
 
+#IMPORTANT: to set exposure:
+# v4l2-ctl -c exposure_auto=1 -c exposure_absolute=10 -d /dev/videoX
+
 # Location of a target in an image
 class TargetLocation:
   # x, y, width, height locations are in range of 0.0 - 1.0, pitch and yaw are in radians
@@ -68,6 +71,7 @@ def high_goal_detect(
   image_hsv = cv2.cvtColor(image_blur, cv2.COLOR_BGR2HSV)
   # mask hsv to specified range
   image_mask = cv2.inRange(image_hsv, low_hsv, high_hsv)
+  cv2.imshow("masked", image_mask)
   # find contours
   contours, _ = cv2.findContours(image_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_TC89_KCOS)
   # sort contours (large -> small)
@@ -98,17 +102,40 @@ def high_goal_detect(
 
   return targets
 
+cap = cv2.VideoCapture(2)
+
+while(True):
+    # Capture images from camera
+    ret, img = cap.read()
+
+    targets = high_goal_detect(img, low_hsv=np.array([53, 213, 100]), high_hsv=np.array([100, 255, 255]), blur_radius=1)
+    for tar in targets:
+      tar.drawOnImage(img)
+      print(math.degrees(tar.yaw))
+    
+    cv2.imshow("targets", img)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# When everything done, release the capture
+cap.release()
+cv2.destroyAllWindows()
+
+"""
 if len(sys.argv) < 2:
   print("Usage: high_goal.py image1 image2 ...")
   exit(1)
 
 for path in sys.argv[1:]:
   img = cv2.imread(path)
-  targets = high_goal_detect(img)
+  targets = high_goal_detect(img, low_hsv=np.array([53, 213, 100]), high_hsv=np.array([100, 255, 255]), blur_radius=1)
   if(len(targets) >= 1):
     targets[0].drawOnImage(img)
     print(math.degrees(targets[0].yaw))
-    cv2.imshow("targets", img)
-    while(cv2.waitKey(0) & 0xff != ord('q')):
-      pass
-    cv2.destroyAllWindows()
+
+  cv2.imshow("targets", img)
+  while(cv2.waitKey(0) & 0xff != ord('q')):
+    pass
+  cv2.destroyAllWindows()
+"""
