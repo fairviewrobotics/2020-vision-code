@@ -24,7 +24,7 @@ class TargetLocation:
   # draw on an image
   def drawOnImage(self, image):
     img_h, img_w, _ = image.shape
-    cv2.rectangle(image, (int(self.x * img_w), int(self.y * img_h)), (int((self.x + self.width) * img_w), int((self.y + self.height) * img_h)), (0, 0, 255), 1)
+    cv2.rectangle(image, (int(self.x * img_w), int(self.y * img_h)), (int((self.x + self.width) * img_w), int((self.y + self.height) * img_h)), (0, 0, 255), 2)
 
 
 # Given an image, detect targets in it
@@ -44,6 +44,7 @@ def high_goal_detect(
     low_hsv=np.array([0,220,25]), 
     high_hsv=np.array([101, 255, 255]),
     blur_radius=5,
+    reblur_radius=5,
     min_area_ratio=0.001,
     diag_field_view = math.radians(68.5), #Lifecam 3000
     aspect_h=16,  #Lifecam 3000
@@ -67,13 +68,22 @@ def high_goal_detect(
   image_rs = cv2.resize(image, (resize_width, resize_height))
   # blur
   image_blur = cv2.blur(image_rs, (blur_radius, blur_radius))
+  cv2.imshow("blurred", image_blur)
   # convert to hsv
   image_hsv = cv2.cvtColor(image_blur, cv2.COLOR_BGR2HSV)
+  cv2.imshow("hsv", image_hsv)
   # mask hsv to specified range
   image_mask = cv2.inRange(image_hsv, low_hsv, high_hsv)
+  cv2.imshow("masked 0", image_mask)
+  # blur and re threshold image
+  image_mask_blur = cv2.blur(image_mask, (reblur_radius, reblur_radius))
+  cv2.imshow("blurred mask", image_mask_blur)
+  _, image_mask = cv2.threshold(image_mask_blur, 50, 255, cv2.THRESH_BINARY)
   cv2.imshow("masked", image_mask)
   # find contours
   contours, _ = cv2.findContours(image_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_TC89_KCOS)
+  cv2.drawContours(image_rs, contours, -1, (0, 0, 255), 2)
+  cv2.imshow("cnts", image_rs)
   # sort contours (large -> small)
   contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
 
@@ -81,14 +91,14 @@ def high_goal_detect(
 
   for cnt in contours:
     # convex hull area
-    hull_area = cv2.contourArea(cv2.convexHull(cnt))
+    hull_area = cv2.contourArea(cnt)
     image_area = resize_width * resize_height
     if float(hull_area) / float(image_area) >= min_area_ratio:
       # find bounding box for countour
       x, y, w, h = cv2.boundingRect(cnt)
       # because vision target is just on the lower half of the real target, adjust box to include top half
       y -= h
-      h *= 2
+      h *= 1.9
 
       # find center of bounding rectangle
       cx = x + int(w/2)
@@ -101,14 +111,14 @@ def high_goal_detect(
       targets.append(TargetLocation(x/resize_width, y/resize_height, w/resize_width, h/resize_height, yaw, pitch))
 
   return targets
-
+"""
 cap = cv2.VideoCapture(2)
 
 while(True):
     # Capture images from camera
     ret, img = cap.read()
 
-    targets = high_goal_detect(img, low_hsv=np.array([53, 213, 100]), high_hsv=np.array([100, 255, 255]), blur_radius=1)
+    targets = high_goal_detect(img, low_hsv=np.array([53, 213, 100]), high_hsv=np.array([100, 255, 255]), blur_radius=1, reblur_radius=11)
     for tar in targets:
       tar.drawOnImage(img)
       print(math.degrees(tar.yaw))
@@ -138,4 +148,4 @@ for path in sys.argv[1:]:
   while(cv2.waitKey(0) & 0xff != ord('q')):
     pass
   cv2.destroyAllWindows()
-"""
+
