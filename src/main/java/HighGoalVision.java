@@ -115,8 +115,8 @@ class HighGoalDetectObject {
 
   public static void main(String[] args) {
     System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-    Mat image = Imgcodecs.imread(args[1]);
+    Mat image = Imgcodecs.imread(args[0]);
 
-    var targets = highGoalDetect(image, new Size(320, 240), new Scalar(53, 213, 100), new Scalar(100, 255, 255), 1, 5, 0.001, Math.toRadians(68.5), 16.0, 9.0);
+    List<TargetLocation> targets = highGoalDetect(image, new Size(320, 240), new Scalar(53, 213, 100), new Scalar(100, 255, 255), 1, 5, 0.001, Math.toRadians(68.5), 16.0, 9.0);
   }
 }
