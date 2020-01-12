@@ -11,6 +11,7 @@ import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.*;
 import org.opencv.objdetect.*;
+import java.lang.Math;
 
 public class BallVision{
 
@@ -44,11 +45,28 @@ public class BallVision{
         System.out.println("Done");
     }
 
+    public static double calculateAngle(long val, long centerVal, double focalLen) {
+            return Math.atan(((double)(val - centerVal)) / focalLen);
+    }
+    
     public static Mat algorithm(Mat input) {
-        // Resize
-        Mat resizeInput = input;
+
+        //Calculate Camera Information - (by Edward)
         double resizeWidth = 320.0;
         double resizeHeight = 240.0;
+
+        double diagFieldView = Math.toRadians(68.5);
+        double aspectH = 16.0;
+        double aspectV = 9.0;
+        
+        double aspectDiag = Math.hypot(aspectH, aspectV);
+
+        double fieldViewH = Math.atan(Math.tan(diagFieldView / 2.0) * (aspectH / aspectDiag)) * 2.0;
+
+        double hFocalLen = resizeWidth / (2.0 * Math.tan((fieldViewH / 2.0)));
+
+        // Resize
+        Mat resizeInput = input;
         Size toScale = new Size(resizeWidth, resizeHeight);
         Mat resizedOutput = new Mat();
         Imgproc.resize(resizeInput, resizedOutput, toScale);
@@ -71,7 +89,7 @@ public class BallVision{
             new Scalar(hsvThresholdHue[1], hsvThresholdSaturation[1], hsvThresholdValue[1]), hsvOutput);
 
         //Find and draw contours
-        Imgcodecs.imwrite("HSV Output.jpg", hsvOutput);
+        //Imgcodecs.imwrite("HSV Output.jpg", hsvOutput);
         Mat contourInput = hsvOutput;
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
@@ -86,12 +104,17 @@ public class BallVision{
 
             if(ballArea>=1000){
                 Rect boundRect = Imgproc.boundingRect(contour);
+
+                if((double)boundRect.width/boundRect.height < 1.1 && (double)boundRect.width/boundRect.height > .9){
                 Imgproc.rectangle(resizedOutput, new Point(boundRect.x,boundRect.y), new Point(boundRect.x+boundRect.width,boundRect.y+boundRect.height), new Scalar(0,255,0),5);
                 long centerx = boundRect.x + boundRect.width / 2;
                 long centery = boundRect.y + boundRect.height / 2;
+                double yaw = calculateAngle(centerx, (long)resizeWidth/2, hFocalLen);
                 System.out.println("Target found!");
                 System.out.println("Center at (" + centerx + ", " + centery + ")");
+                System.out.println("Yaw offset from center: " + yaw);
                 Imgproc.drawMarker(resizedOutput, new Point(centerx,centery), new Scalar(0,255,0));
+                }
             }
 
         }
