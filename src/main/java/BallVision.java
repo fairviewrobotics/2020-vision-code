@@ -17,42 +17,14 @@ public class BallVision{
 //Load 6 test images, process, and write 6 output images. To-Do: Replace with camera input
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        String image1 = "src/main/java/BallImage.jpg";
-        String image2 = "src/main/java/BallImage2.JPG";
-        String image3 = "src/main/java/BallImage3.JPG";
-        String image4 = "src/main/java/BallImage4.JPG";
-        String image5 = "src/main/java/BallImage5.JPG";
-        String image6 = "src/main/java/BallImage6.JPG";
-        String image7 = "src/main/java/BallImage7.jpg";
-        String image8 = "src/main/java/BallImage8.jpg";
-        String image9 = "src/main/java/BallImage9.jpg";
-        Mat input1 = Imgcodecs.imread(image1);
-        Mat input2 = Imgcodecs.imread(image2);
-        Mat input3 = Imgcodecs.imread(image3);
-        Mat input4 = Imgcodecs.imread(image4);
-        Mat input5 = Imgcodecs.imread(image5);
-        Mat input6 = Imgcodecs.imread(image6);
-        Mat input7 = Imgcodecs.imread(image7);
-        Mat input8 = Imgcodecs.imread(image8);
-        Mat input9 = Imgcodecs.imread(image9);
-        Mat output1 = algorithm(input1);
-        Mat output2 = algorithm(input2);
-        Mat output3 = algorithm(input3);
-        Mat output4 = algorithm(input4);
-        Mat output5 = algorithm(input5);
-        Mat output6 = algorithm(input6);
-        Mat output7 = algorithm(input7);
-        Mat output8 = algorithm(input8);
-        Mat output9 = algorithm(input9);
-        Imgcodecs.imwrite("Output Image1.jpg", output1);
-        Imgcodecs.imwrite("Output Image2.jpg", output2);
-        Imgcodecs.imwrite("Output Image3.jpg", output3);
-        Imgcodecs.imwrite("Output Image4.jpg", output4);
-        Imgcodecs.imwrite("Output Image5.jpg", output5);
-        Imgcodecs.imwrite("Output Image6.jpg", output6);
-        Imgcodecs.imwrite("Output Image7.jpg", output7);
-        Imgcodecs.imwrite("Output Image8.jpg", output8);
-        Imgcodecs.imwrite("Output Image9.jpg", output9);
+        for (int i = 1; i<10; i++){
+            String image= "src/main/java/BallImage";
+            image = image + i + ".jpg";
+            Mat input = Imgcodecs.imread(image);
+            Mat output = algorithm(input);
+            String output_fname = "Output Image " + i + ".jpg";
+            Imgcodecs.imwrite(output_fname, output);
+        }
         System.out.println("Done");
     }
 
@@ -132,9 +104,9 @@ public class BallVision{
                 System.out.println("Boundary height: " + boundRect.height);
                 Imgproc.drawMarker(resizedOutput, new Point(centerx,centery), new Scalar(0,255,0));
 
-                double focalLen = 10.0; // estimated focal length of Edward's camera
+                double focalLen = 7.0; // estimated focal length of Edward's camera
                 double ballSize = 177.8; // 7 inches in mm
-                double sensorHeight = 15;
+                double sensorHeight = 18.0;
                 double distance = (focalLen * ballSize * resizeWidth) / ((double)boundRect.width * sensorHeight);
                 System.out.println("Distance from Camera: " + distance + "mm");
             }
