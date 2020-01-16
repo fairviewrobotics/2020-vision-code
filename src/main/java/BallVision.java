@@ -132,10 +132,11 @@ public class BallVision{
                 System.out.println("Boundary height: " + boundRect.height);
                 Imgproc.drawMarker(resizedOutput, new Point(centerx,centery), new Scalar(0,255,0));
 
-                double focalLen = 1.92; // estimated focal length of Edward's camera
+                double focalLen = 10.0; // estimated focal length of Edward's camera
                 double ballSize = 177.8; // 7 inches in mm
-                double distance = (focalLen * ballSize * resizeWidth) / (boundRect.width * 15);
-                System.out.println("Distance from Camera: " + distance);
+                double sensorHeight = 15;
+                double distance = (focalLen * ballSize * resizeWidth) / ((double)boundRect.width * sensorHeight);
+                System.out.println("Distance from Camera: " + distance + "mm");
             }
 
         }
