@@ -16,13 +16,15 @@ public class BallVision{
 
 //Load 6 test images, process, and write 6 output images. To-Do: Replace with camera input
     public static void main(String[] args) {
+        long hm_images = 13;
+
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        for (int i = 1; i<10; i++){
-            String image= "src/main/java/BallImage";
+        for (int i = 1; i<=hm_images; i++){
+            String image= "src/test_inputs/BallImage";
             image = image + i + ".jpg";
             Mat input = Imgcodecs.imread(image);
             Mat output = algorithm(input);
-            String output_fname = "Output Image " + i + ".jpg";
+            String output_fname = "src/test_outputs/Output Image " + i + ".jpg";
             Imgcodecs.imwrite(output_fname, output);
         }
         System.out.println("Done");
@@ -90,7 +92,7 @@ public class BallVision{
             }
 
             double ratio = (double)boundRect.width / (double)boundRect.height;
-            System.out.println(ratio);
+            //System.out.println(ratio);
             boolean in_tolerance = Math.abs(1 - ratio) < tolerance;
 
             //in_tolerance = boundRect.width >= boundRect.height;*/
@@ -104,7 +106,7 @@ public class BallVision{
                 System.out.println("Boundary height: " + boundRect.height);
                 Imgproc.drawMarker(resizedOutput, new Point(centerx,centery), new Scalar(0,255,0));
 
-                double focalLen = 7.0; // estimated focal length of Edward's camera
+                double focalLen = 10.0; // estimated focal length of Edward's camera
                 double ballSize = 177.8; // 7 inches in mm
                 double sensorHeight = 18.0;
                 double distance = (focalLen * ballSize * resizeWidth) / ((double)boundRect.width * sensorHeight);
