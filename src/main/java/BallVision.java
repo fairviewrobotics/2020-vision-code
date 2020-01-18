@@ -14,20 +14,31 @@ import org.opencv.objdetect.*;
 
 public class BallVision{
 
-//Load 6 test images, process, and write 6 output images. To-Do: Replace with camera input
+    private static TargetLocation target;
+
+//Load test images, process, and write output images. To-Do: Replace with camera input
     public static void main(String[] args) {
+
+        String mode = "test"; // modes: test, run
         long hm_images = 18;
 
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        for (int i = 1; i<=hm_images; i++){
-            String image= "src/test_inputs/BallImage";
-            image = image + i + ".jpg";
-            Mat input = Imgcodecs.imread(image);
-            Mat output = algorithm(input);
-            String output_fname = "src/test_outputs/Output Image " + i + ".jpg";
-            Imgcodecs.imwrite(output_fname, output);
+
+        if (mode == "test") {
+            // test using test_inputs, writing to test_outputs
+            for (int i = 1; i <= hm_images; i++) {
+                String image = "src/test_inputs/BallImage";
+                image = image + i + ".jpg";
+                Mat input = Imgcodecs.imread(image);
+                Mat output = algorithm(input);
+                String output_fname = "src/test_outputs/Output Image " + i + ".jpg";
+                Imgcodecs.imwrite(output_fname, output);
+            }
+            System.out.println("Done");
         }
-        System.out.println("Done");
+        else if (mode == "run") {
+
+        }
     }
 
     /* calculate yaw or pitch (in radians) */
@@ -107,6 +118,8 @@ public class BallVision{
                 //in_tolerance = boundRect.width >= boundRect.height;*/
             }
             if(ballArea>=100 && in_tolerance){
+                // create target location
+
                 Imgproc.rectangle(resizedOutput, new Point(boundRect.x,boundRect.y), new Point(boundRect.x+boundRect.width,boundRect.y+boundRect.height), new Scalar(255,0,0),5);
                 long centerx = boundRect.x + boundRect.width / 2;
                 long centery = boundRect.y + boundRect.height / 2;
@@ -156,6 +169,14 @@ public class BallVision{
         double yaw = calcAngle(best_centerx, (long)resizeWidth/2, hFocalLen);
         System.out.println(yaw);
 
+        target = new TargetLocation(
+                bestBoundRect.x,
+                bestBoundRect.y,
+                bestBoundRect.width,
+                bestBoundRect.height,
+                yaw,
+                0.0
+                );
         return resizedOutput;
     }
 
