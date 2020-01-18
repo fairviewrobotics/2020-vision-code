@@ -16,7 +16,7 @@ public class BallVision{
 
 //Load 6 test images, process, and write 6 output images. To-Do: Replace with camera input
     public static void main(String[] args) {
-        long hm_images = 13;
+        long hm_images = 14;
 
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         for (int i = 1; i<=hm_images; i++){
@@ -39,7 +39,7 @@ public class BallVision{
         // Resize
         Mat resizeInput = input;
         double resizeWidth = 320.0;
-        double resizeHeight = 240.0;
+        double resizeHeight = 181.3;
         Size toScale = new Size(resizeWidth, resizeHeight);
         Mat resizedOutput = new Mat();
         Imgproc.resize(resizeInput, resizedOutput, toScale);
@@ -56,14 +56,14 @@ public class BallVision{
          */
         // Blur
         Mat blurInput = resizedOutput;
-		double blurRadius = 2.7;
+		double blurRadius = 2.7;//2.7;
         double kernelSize = 2 * (blurRadius + 0.5) + 1;
         Mat blurOutput = new Mat();
         Imgproc.blur(blurInput, blurOutput, new Size(kernelSize, kernelSize));
         
         // Convert to HSV and Threshold
         Mat hsvThresholdInput = blurOutput;
-		double[] hsvThresholdHue = {20.0, 180.0};
+		double[] hsvThresholdHue = {20.0, 90.0};//{20.0, 180.0};
 		double[] hsvThresholdSaturation = {130.0, 255.0};
         double[] hsvThresholdValue = {0.0, 255.0};
         Mat hsvOutput = new Mat();
@@ -82,20 +82,24 @@ public class BallVision{
         
         //For each contour found, draw bounding rectangle and marker at center if over a certain size
         double tolerance = 0.3;
+        boolean using_tolerances = false;
         for(MatOfPoint contour : contours) {
             double ballArea = Imgproc.contourArea(contour);
 
             Rect boundRect = Imgproc.boundingRect(contour);
 
-            if (boundRect.height == 0) {
-                continue;
+            boolean in_tolerance = true;
+            if (using_tolerances) {
+                if (boundRect.height == 0) {
+                    continue;
+                }
+
+                double ratio = (double) boundRect.width / (double) boundRect.height;
+                //System.out.println(ratio);
+                in_tolerance = Math.abs(1 - ratio) < tolerance;
+
+                //in_tolerance = boundRect.width >= boundRect.height;*/
             }
-
-            double ratio = (double)boundRect.width / (double)boundRect.height;
-            //System.out.println(ratio);
-            boolean in_tolerance = Math.abs(1 - ratio) < tolerance;
-
-            //in_tolerance = boundRect.width >= boundRect.height;*/
             if(ballArea>=1000 && in_tolerance){
                 Imgproc.rectangle(resizedOutput, new Point(boundRect.x,boundRect.y), new Point(boundRect.x+boundRect.width,boundRect.y+boundRect.height), new Scalar(0,255,0),5);
                 long centerx = boundRect.x + boundRect.width / 2;
@@ -106,11 +110,15 @@ public class BallVision{
                 System.out.println("Boundary height: " + boundRect.height);
                 Imgproc.drawMarker(resizedOutput, new Point(centerx,centery), new Scalar(0,255,0));
 
-                double focalLen = 10.0; // estimated focal length of Edward's camera
+                /*
+                double focalLen = 55.1; // estimated focal length of Edward's camera
                 double ballSize = 177.8; // 7 inches in mm
-                double sensorHeight = 18.0;
+                double sensorHeight = 32.0;
+                // distance = (width of object)(focal length)/(Pixel width of object)
                 double distance = (focalLen * ballSize * resizeWidth) / ((double)boundRect.width * sensorHeight);
-                System.out.println("Distance from Camera: " + distance + "mm");
+                //double distance = (ballSize * focalLen) / (double)boundRect.width;
+                System.out.println("Distance from Camera " + distance + " mm");
+                 */
             }
 
         }
