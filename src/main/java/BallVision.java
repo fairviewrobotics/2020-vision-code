@@ -16,7 +16,7 @@ public class BallVision{
 
 //Load 6 test images, process, and write 6 output images. To-Do: Replace with camera input
     public static void main(String[] args) {
-        long hm_images = 14;
+        long hm_images = 18;
 
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         for (int i = 1; i<=hm_images; i++){
@@ -83,6 +83,12 @@ public class BallVision{
         //For each contour found, draw bounding rectangle and marker at center if over a certain size
         double tolerance = 0.3;
         boolean using_tolerances = false;
+
+        long best_centerx = 0;
+        long best_centery = 0;
+        long largest_width = 0;
+        Rect bestBoundRect = new Rect();
+
         for(MatOfPoint contour : contours) {
             double ballArea = Imgproc.contourArea(contour);
 
@@ -100,15 +106,24 @@ public class BallVision{
 
                 //in_tolerance = boundRect.width >= boundRect.height;*/
             }
-            if(ballArea>=1000 && in_tolerance){
-                Imgproc.rectangle(resizedOutput, new Point(boundRect.x,boundRect.y), new Point(boundRect.x+boundRect.width,boundRect.y+boundRect.height), new Scalar(0,255,0),5);
+            if(ballArea>=100 && in_tolerance){
+                Imgproc.rectangle(resizedOutput, new Point(boundRect.x,boundRect.y), new Point(boundRect.x+boundRect.width,boundRect.y+boundRect.height), new Scalar(255,0,0),5);
                 long centerx = boundRect.x + boundRect.width / 2;
                 long centery = boundRect.y + boundRect.height / 2;
                 System.out.println("Target found!");
                 System.out.println("Center at (" + centerx + ", " + centery + ")");
                 System.out.println("Boundary width: " + boundRect.width);
                 System.out.println("Boundary height: " + boundRect.height);
-                Imgproc.drawMarker(resizedOutput, new Point(centerx,centery), new Scalar(0,255,0));
+                Imgproc.drawMarker(resizedOutput, new Point(centerx,centery), new Scalar(255,0,0));
+
+                // Determine if this is a better target
+                long width = boundRect.width;
+                if (width >= largest_width) {
+                    best_centerx = centerx;
+                    best_centery = centery;
+                    largest_width = width;
+                    bestBoundRect = boundRect;
+                }
 
                 /*
                 double focalLen = 55.1; // estimated focal length of Edward's camera
@@ -122,6 +137,25 @@ public class BallVision{
             }
 
         }
+        Imgproc.rectangle(resizedOutput, new Point(bestBoundRect.x,bestBoundRect.y), new Point(bestBoundRect.x+bestBoundRect.width,bestBoundRect.y+bestBoundRect.height), new Scalar(0,255,0),5);
+        Imgproc.drawMarker(resizedOutput, new Point(best_centerx,best_centery), new Scalar(0,255,0));
+
+        // Calculate hFocalLen
+        double aspectH = resizeWidth;
+        double aspectV = resizeHeight;
+        double aspectDiag = Math.hypot(aspectH, aspectV);
+        double diagFieldView = Math.toRadians(68.5);
+
+        double fieldViewH = Math.atan(Math.tan(diagFieldView / 2.0) * (aspectH / aspectDiag)) * 2.0;
+        double fieldViewV = Math.atan(Math.tan(diagFieldView / 2.0) * (aspectV / aspectDiag)) * 2.0;
+
+        double hFocalLen = resizeWidth / (2.0 * Math.tan((fieldViewH / 2.0)));
+        //double vFocalLen = resizedOutput.height / (2.0 * Math.tan((fieldViewV / 2.0)));
+
+        // Calculate yaw
+        double yaw = calcAngle(best_centerx, (long)resizeWidth/2, hFocalLen);
+        System.out.println(yaw);
+
         return resizedOutput;
     }
 
