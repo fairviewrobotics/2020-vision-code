@@ -294,10 +294,9 @@ public final class Main {
   }
 
   /**
-   * Example pipeline.
+   * High Goal vision pipeline
    */
-  public static class MyPipeline implements VisionPipeline {
-    public int val;
+  public static class HighGoalVisionPipeline implements VisionPipeline {
     static NetworkTableInstance inst = NetworkTableInstance.getDefault();
     static NetworkTable table = inst.getTable("high-vision");
     static NetworkTableEntry yaw = table.getEntry("yaw");
@@ -305,16 +304,26 @@ public final class Main {
 
     @Override
     public void process(Mat mat) {
-      List<TargetLocation> targets = HighGoalVision.highGoalDetect(mat, new Size(320, 240), new Scalar(53, 213, 100), new Scalar(100, 255, 255), 1, 5, 0.001, Math.toRadians(68.5), 16.0, 9.0);
+      System.out.println("processing");
+      List<TargetLocation> targets = HighGoalVision.highGoalDetect(mat, new Size(256, 144), new Scalar(53, 213, 100), new Scalar(100, 255, 255), 1, 5, 0.001, Math.toRadians(68.5), 16.0, 9.0);
 
       if(targets.size() >= 1) {
-        yaw.setDouble(targets.get(0).yaw);
+        yaw.setDouble(Math.toDegrees(targets.get(0).yaw));
         targetFound.setBoolean(true);
       } else {
         targetFound.setBoolean(false);
       }
-      
-      
+    }
+  }
+
+  /**
+   * Ball Vision pipelin
+   */
+  public static class BallVisionPipeline implements VisionPipeline {
+
+    @Override
+    public void process(Mat mat) {
+      /* run vision on mat from camera and publish results to Network tables. See HighGoalVisionPipeline above for an example */
     }
   }
 
@@ -354,16 +363,16 @@ public final class Main {
     // start image processing on camera 0 if present
     if (cameras.size() >= 1) {
       VisionThread visionThread = new VisionThread(cameras.get(0),
-              new MyPipeline(), pipeline -> {
+              new HighGoalVisionPipeline(), pipeline -> {
         // do something with pipeline results
       });
-      /* something like this for GRIP:
-      VisionThread visionThread = new VisionThread(cameras.get(0),
-              new GripPipeline(), pipeline -> {
-        ...
-      });
-       */
       visionThread.start();
+    }
+    if (cameras.size() >= 2) {
+      VisionThread visionThread = new VisionThread(cameras.get(1),
+              new BallVisionPipeline(), pipeline -> {
+
+      });
     }
 
     // loop forever
