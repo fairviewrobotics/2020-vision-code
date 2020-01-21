@@ -1,3 +1,7 @@
+# 2020-vision-code (Raspberry pi branch)
+
+This is the code that actually runs on the raspberry pi. The build instructions supplied by wpilib are below. Ideally we build on the desktop then deploy to the pi.
+
 ===================
 Building on desktop
 ===================
