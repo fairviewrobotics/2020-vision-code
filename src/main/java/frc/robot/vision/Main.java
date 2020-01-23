@@ -299,8 +299,12 @@ public final class Main {
   public static class HighGoalVisionPipeline implements VisionPipeline {
     static NetworkTableInstance inst = NetworkTableInstance.getDefault();
     static NetworkTable table = inst.getTable("high-vision");
-    static NetworkTableEntry yaw = table.getEntry("yaw");
+    // indicates if a target was found
     static NetworkTableEntry targetFound = table.getEntry("isTarget");
+    // indicates yaw offset of target (in degrees)
+    static NetworkTableEntry yaw = table.getEntry("yaw");
+    // indicates if edge of target is close to the top of the image (target partially obscured, yaw may be inaccurate)
+    static NetworkTableEntry targetAtTopOfImage = table.getEntry("targetAtTopImage");
 
     @Override
     public void process(Mat mat) {
@@ -310,8 +314,14 @@ public final class Main {
       if(targets.size() >= 1) {
         yaw.setDouble(Math.toDegrees(targets.get(0).yaw));
         targetFound.setBoolean(true);
+        if(targets.get(0).x < 0.07) {
+          targetAtTopOfImage.setBoolean(true);
+        } else {
+          targetAtTopOfImage.setBoolean(false);
+        }
       } else {
         targetFound.setBoolean(false);
+        targetAtTopOfImage.setBoolean(false);
       }
     }
   }
