@@ -8,7 +8,7 @@ import org.opencv.core.*;
 import org.opencv.imgproc.*;
 
 /* A location of a target in an image */
-class TargetLocation {
+public class TargetLocation {
   double x, y, w, h, yaw, pitch;
 
   TargetLocation(double x, double y, double w, double h, double yaw, double pitch) {

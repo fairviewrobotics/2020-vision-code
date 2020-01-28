@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.lang.Math;
 import java.util.Collections;
 
-class HighGoalDetectObject {
+public class HighGoalVision {
 
   /* calculate yaw or pitch (in radians) */
   static double calcAngle(long val, long centerVal, double focalLen) {
