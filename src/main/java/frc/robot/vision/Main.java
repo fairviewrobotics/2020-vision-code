@@ -327,13 +327,29 @@ public final class Main {
   }
 
   /**
-   * Ball Vision pipelin
+   * Ball Vision pipeline
    */
   public static class BallVisionPipeline implements VisionPipeline {
+    static NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    static NetworkTable table = inst.getTable("ball-vision");
+    // indicates if a target was found
+    static NetworkTableEntry targetFound = table.getEntry("isTarget");
+    // indicates yaw offset of target (in degrees)
+    static NetworkTableEntry yaw = table.getEntry("yaw");
 
     @Override
     public void process(Mat mat) {
       /* run vision on mat from camera and publish results to Network tables. See HighGoalVisionPipeline above for an example */
+      System.out.println("processing Ball Vision...");
+      TargetLocation target = BallVision.algorithm(mat);
+
+      if (target.w == 0.0 || target.h == 0.0) {
+        targetFound.setBoolean(false);
+        yaw.setDouble(Math.toDegrees(target.yaw));
+      }
+      else {
+        targetFound.setBoolean(true);
+      }
     }
   }
 

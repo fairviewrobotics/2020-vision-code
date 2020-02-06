@@ -14,8 +14,28 @@ import org.opencv.objdetect.*;
 
 public class BallVision{
 
+    static Mat resizeInput = new Mat();
+    static Size toScale = new Size();
+
+    static Mat resizedOutput = new Mat();
+
+    static Mat blurInput = new Mat();
+    static Mat blurOutput = new Mat();
+
+    static Size kernel = new Size();
+
+    static Mat hsvThresholdInput = new Mat();
+    static Mat hsvOutput = new Mat();
+
+    static Mat contourInput = new Mat();
+
+    static List<MatOfPoint> contours = new ArrayList<>();
+    static Mat hierarchy = new Mat();
+
+
 //Load 6 test images, process, and write 6 output images. To-Do: Replace with camera input
     public static void main(String[] args) {
+        /*
         long hm_images = 18;
 
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -27,7 +47,7 @@ public class BallVision{
             String output_fname = "src/test_outputs/Output Image " + i + ".jpg";
             Imgcodecs.imwrite(output_fname, output);
         }
-        System.out.println("Done");
+        System.out.println("Done");*/
     }
 
     /* calculate yaw or pitch (in radians) */
@@ -35,13 +55,13 @@ public class BallVision{
         return Math.atan(((double)(val - centerVal)) / focalLen);
     }
 
-    public static Mat algorithm(Mat input) {
+    public static TargetLocation algorithm(Mat input) {
         // Resize
-        Mat resizeInput = input;
+        resizeInput = input;
         double resizeWidth = 320.0;
         double resizeHeight = 181.3;
-        Size toScale = new Size(resizeWidth, resizeHeight);
-        Mat resizedOutput = new Mat();
+        toScale.width = resizeWidth;
+        toScale.height = resizeHeight;
         Imgproc.resize(resizeInput, resizedOutput, toScale);
 
         /* calculate camera information
@@ -55,27 +75,26 @@ public class BallVision{
 
          */
         // Blur
-        Mat blurInput = resizedOutput;
+        blurInput = resizedOutput;
 		double blurRadius = 2.7;//2.7;
         double kernelSize = 2 * (blurRadius + 0.5) + 1;
-        Mat blurOutput = new Mat();
-        Imgproc.blur(blurInput, blurOutput, new Size(kernelSize, kernelSize));
+        blurOutput = new Mat();
+        kernel.width = kernelSize;
+        kernel.height = kernelSize;
+        Imgproc.blur(blurInput, blurOutput, kernel);
         
         // Convert to HSV and Threshold
-        Mat hsvThresholdInput = blurOutput;
+        hsvThresholdInput = blurOutput;
 		double[] hsvThresholdHue = {20.0, 90.0};//{20.0, 180.0};
 		double[] hsvThresholdSaturation = {130.0, 255.0};
         double[] hsvThresholdValue = {0.0, 255.0};
-        Mat hsvOutput = new Mat();
         Imgproc.cvtColor(hsvThresholdInput, hsvOutput, Imgproc.COLOR_BGR2HSV);
 		Core.inRange(hsvOutput, new Scalar(hsvThresholdHue[0], hsvThresholdSaturation[0], hsvThresholdValue[0]),
             new Scalar(hsvThresholdHue[1], hsvThresholdSaturation[1], hsvThresholdValue[1]), hsvOutput);
 
         //Find and draw contours
-        Imgcodecs.imwrite("HSV Output.jpg", hsvOutput);
-        Mat contourInput = hsvOutput;
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchy = new Mat();
+        //Imgcodecs.imwrite("HSV Output.jpg", hsvOutput);
+        contourInput = hsvOutput;
         contours.clear();
         Imgproc.findContours(contourInput, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         Imgproc.drawContours(resizedOutput, contours, -1, new Scalar(0,0,255),1);
@@ -87,7 +106,7 @@ public class BallVision{
         long best_centerx = 0;
         long best_centery = 0;
         long largest_width = 0;
-        Rect bestBoundRect = new Rect();
+        Rect bestBoundRect = new Rect(0, 0, 0, 0);
 
         for(MatOfPoint contour : contours) {
             double ballArea = Imgproc.contourArea(contour);
@@ -156,7 +175,8 @@ public class BallVision{
         double yaw = calcAngle(best_centerx, (long)resizeWidth/2, hFocalLen);
         System.out.println(yaw);
 
-        return resizedOutput;
+        TargetLocation target = new TargetLocation(bestBoundRect.x, bestBoundRect.y, bestBoundRect.width, bestBoundRect.height, yaw, 0.0);
+        return target;
     }
 
 }
