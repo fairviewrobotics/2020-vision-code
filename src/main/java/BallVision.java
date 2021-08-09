@@ -52,7 +52,7 @@ public class BallVision {
                     Math.toRadians(68.5),
                     16.0,
                     9.0
-                    );
+                    ); // TODO: figure out how to send this to the robot with network tables
         }
     }
 
